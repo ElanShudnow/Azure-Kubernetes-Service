@@ -9,5 +9,13 @@
 		"ghcr.io/devcontainers-extra/features/kubectl-asdf:2": {
 			"version": "latest"
 		}
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-kubernetes-tools.vscode-kubernetes-tools",
+				"redhat.vscode-yaml"
+			]
+		}
 	}
 }
