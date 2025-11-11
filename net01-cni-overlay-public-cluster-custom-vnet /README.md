@@ -1,10 +1,10 @@
-# AKS CNI Overlay Public Cluster with Managed Virtual Network
+# AKS CNI Overlay Public Cluster with Custom Virtual Network
 
 ## Description
-Learn about AKS CNI Overlay Public Clusters with an AKS Managed Virtual Network.  Learn what goes into planning a CNI Overlay Cluster, what the configuration looks like, and use my Azure CLI Scrapbook to deploy.  A public AKS Cluster is where the API Server is reachable via the internet. 
+Learn about AKS CNI Overlay Public Clusters with a Custom Virtual Network.  Learn what goes into planning a CNI Overlay Cluster, what the configuration looks like, and use my Azure CLI Scrapbook to deploy.  A public AKS Cluster is where the API Server is reachable via the internet. 
 
 ## Files Involved
-- net00-cni-overlay-public-cluster-managed-vnet.azcli
+- net01-cni-overlay-public-cluster-custom-vnet.azcli
 
 ## Introduction
 A CNI Overlay Cluster uses a NAT Overlay network that has been integrated into Azure's Software Defined Network.  The legacy kubenet technology required the use of Route Tables and User Defined Routes (UDRs) to allow the pods/Nodes to be able to talk to each other.  Due to the integration of the overlay with CNI Overlay into the Azure Software Defined Network, Route Tables and UDRs are not required for CNI Overlay.
@@ -27,12 +27,17 @@ The following are some other general guidelines regarding AKS Public CNI Overlay
 
     * Pod CIDR: 10.244.0.0/16
     * Service CIDR: 10.0.0/16
-    * DNS Service IP: 10.0.0.10/32 
+    * DNS Service IP: 10.0.0.10/32
+
+    > **Note**: As we will be using a custom Virtual Network, we will be specifying the network prefixes we want for each. We will use the defaults but within our own virtual network.
 
 * If you leave the AKS Cluster to create and manage the Virtual Network (which is one of the goals of this articles), the following Virtual Network Address Space and Node Subnet are used:
 
     * Virtual Network Address Space: 10.224.0.0/12
     * Node Subnet (aks-subnet): 10.224.0.0/16
+
+    > **Note**: As we will be using a custom Virtual Network, we will be specifying the network prefixes we want for each. We will use the defaults but within our own virtual network.
+
 
 ![CNI Overlay Architecture](../media/net00-cni-overlay-public-cluster-managed-vnet/azure-cni-overlay.png?raw=true)
 
@@ -49,7 +54,7 @@ I would recommend reading the following articles which discuss more of the above
 * [IP address planning for your Azure Kubernetes Service (AKS) clusters](https://learn.microsoft.com/en-us/azure/aks/concepts-network-ip-address-planning)
 
 ## Deployment
-1. Download net00-cni-overlay-public-cluster-managed-vnet.azcli
+1. Download net01-cni-overlay-public-cluster-custom-vnet.azcli
 
 2. Login to Azure using the Azure CLI in your Shell of choice.  Download Azure CLI here: [How to install the Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest)
 
@@ -57,32 +62,59 @@ I would recommend reading the following articles which discuss more of the above
 
     #### Deploy Variables
 
-    ![Variables-01](../media/net00-cni-overlay-public-cluster-managed-vnet/variables01.png?raw=true)
+    ![Variables-01](../media/net01-cni-overlay-public-cluster-custom-vnet/variables01.png?raw=true)
 
-    ![Variables-02](../media/net00-cni-overlay-public-cluster-managed-vnet/variables02.png?raw=true)
+    ![Variables-02](../media/net01-cni-overlay-public-cluster-custom-vnet/variables02.png?raw=true)
+
+    ![Variables-03](../media/net01-cni-overlay-public-cluster-custom-vnet/variables03.png?raw=true)
+
+    ![Variables-04](../media/net01-cni-overlay-public-cluster-custom-vnet/variables04.png?raw=true)
 
     #### Create Resource Group
 
-    ![ResourceGroup-Creation](../media/net00-cni-overlay-public-cluster-managed-vnet/resourcegroup.png?raw=true)
+    ![ResourceGroup-Creation](../media/net01-cni-overlay-public-cluster-custom-vnet/resourcegroup.png?raw=true)
+
+    #### Create Virtual Network/Subnet
+
+    ![VirtualNetwork-Creation](../media/net01-cni-overlay-public-cluster-custom-vnet/virtualnetwork.png?raw=true)
+
+    #### Capture Node Subnet ID for AKS Nodes to be deployed within
+
+    ![VNET-NodeSubnetID](../media/net01-cni-overlay-public-cluster-custom-vnet/nodesubnetid.png?raw=true)
 
     #### Deploy AKS Cluster
 
-    ![AKS Deployment](../media/net00-cni-overlay-public-cluster-managed-vnet/aksdeploy.png?raw=true)
+    ![AKS Deployment](../media/net01-cni-overlay-public-cluster-custom-vnet/aksdeploy.png?raw=true)
 
     #### Connect to AKS Cluster
 
-    ![Connect to AKS](../media/net00-cni-overlay-public-cluster-managed-vnet/connecttoaks.png?raw=true)
+    ![Connect to AKS](../media/net01-cni-overlay-public-cluster-custom-vnet/connecttoaks.png?raw=true)
 
 
 ## Deployment Validation
 
-We deployed our cluster without specifying Pod Cidr, Service Cidr, or DNS Service IP.  Let's confirm our cluster is deployed with the default values we mentioned above.  First, let's take a look at the JSON View of the AKS Cluster in the Azure Portal.
+We deployed our cluster with a Custom Virtual Network and also by specifying Pod Cidr, Service Cidr, or DNS Service IP even though the network prefixes we used are the same network prefixes used if you were to use a Managed Virtual Network.  Let's confirm our cluster is deployed with the values we mentioned above.  First, let's take a look at the JSON View of the AKS Cluster in the Azure Portal.
 
-![JSON View 01](../media/net00-cni-overlay-public-cluster-managed-vnet/jsonview01.png?raw=true)
+![JSON View 01](../media/net01-cni-overlay-public-cluster-custom-vnet/jsonview01.png?raw=true)
 
 Within the JSON view, validate the Pod CIDR, Service CIDR, and DNS Service IP match the 3 network prefixes mentioned earlier:
 
-![JSON View 02](../media/net00-cni-overlay-public-cluster-managed-vnet/jsonview02.png?raw=true)
+![JSON View 02](../media/net01-cni-overlay-public-cluster-custom-vnet/jsonview02.png?raw=true)
+
+Looking at the Virtual Network in the portal, we can see the Virtual Network was deployed with 10.224.0.0/16
+
+![VNET Deployment Validation 01](../media/net01-cni-overlay-public-cluster-custom-vnet/vnetdeploymentvalidation01.png?raw=true)
+
+We also see the subnet, aks-nodes, was deployed with 10.224.0.0/24
+
+![VNET Deployment Validation 02](../media/net01-cni-overlay-public-cluster-custom-vnet/vnetdeploymentvalidation02.png?raw=true)
+
+> **Note**: As can you see, a Network Security Group (NSG) is not created and assigned to the aks-nodes subnet.  If you wish to create a NSG and attach it to your aks-nodes subnet, please follow guidance in the AKS Documentation: [Network Security Groups](https://learn.microsoft.com/en-us/azure/aks/concepts-network#network-security-groups)
+
+Looking at connected devices, we will see our AKS Node (we only deployed 1 node) is connected to the Virtual Network within the aks-nodes subnet.
+
+![VNET Deployment Validation 03](../media/net01-cni-overlay-public-cluster-custom-vnet/vnetdeploymentvalidation03.png?raw=true)
+
 
 Let's run the following kubectl get to see our nodes (we specified only one) and its Private IP Address, whcih should fall within the 10.224.0.0/16 subnet as mentioned in the Introduction section.
 
@@ -90,7 +122,7 @@ Let's run the following kubectl get to see our nodes (we specified only one) and
 kubectl get nodes -o wide
 ```
 
-![Kubectl Get Nodes](../media/net00-cni-overlay-public-cluster-managed-vnet/kubectlgetnodes.png?raw=true)
+![Kubectl Get Nodes](../media/net01-cni-overlay-public-cluster-custom-vnet/kubectlgetnodes.png?raw=true)
 
 
 Let's download a [Quickstart Sample](https://learn.microsoft.com/en-us/azure/aks/learn/quick-kubernetes-deploy-cli) from the Azure Learn Documentation. I have included a downloadable yaml for this here in this GitHub folder. This Quickstart includes pods and services so we can validate the IP Addresses used for both.  
@@ -101,7 +133,7 @@ Run the following command to deploy the Quickstart YAML:
 kubectl apply -f aks-store-quickstart.yaml
 ```
 
-![Quickstart Deploy](../media/net00-cni-overlay-public-cluster-managed-vnet/quickstartdeploy.png?raw=true)
+![Quickstart Deploy](../media/net01-cni-overlay-public-cluster-custom-vnet/quickstartdeploy.png?raw=true)
 
 If we run the following command, it will allow us to validate our services and their Private IPs (Cluster IP) and we can validate the service is using an IP Address in our Service CIDR Range of 10.0.0/16
 
@@ -109,7 +141,7 @@ If we run the following command, it will allow us to validate our services and t
 kubectl get service
 ```
 
-![Kubectl Get Service](../media/net00-cni-overlay-public-cluster-managed-vnet/kubectlgetservice.png?raw=true)
+![Kubectl Get Service](../media/net01-cni-overlay-public-cluster-custom-vnet/kubectlgetservice.png?raw=true)
 
 If we run the following command, it will allow us to validate our pods and their Private IPs belong to the Pod CIDR Network Prefix Range of 10.244.0.0/16
 
@@ -117,7 +149,7 @@ If we run the following command, it will allow us to validate our pods and their
 kubectl get pod -o wide
 ```
 
-![Kubectl Get Pod](../media/net00-cni-overlay-public-cluster-managed-vnet/kubectlgetpod.png?raw=true)
+![Kubectl Get Pod](../media/net01-cni-overlay-public-cluster-custom-vnet/kubectlgetpods.png?raw=true)
 
 It was mentioned in the introduction that for a CNI Overlay Cluster, each node carves out a /24 network prefix for the Pod CIDR which is why each node is allowed to support a max amount of 250 pods per node.  We just validated that the pods are all running on 10.244 which is part of the Pod CIDR Network Prefix.  But if you'd like to see what /24 Pod CIDR Prefix it has been carved out, you can run the following command:
 
