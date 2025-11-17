@@ -1,0 +1,27 @@
+# General
+LOCATION="centralus"
+RG="rg-aks-cluster"
+AKS="aks-cluster"
+
+# Node pool
+NODE_COUNT=1
+NODE_SIZE="Standard_D4ds_v5"
+
+# Create Resource Group
+az group create -n "$RG" -l "$LOCATION"
+
+# Deploy Cluster
+az aks create \
+  -g "$RG" \
+  -n "$AKS" \
+  -l "$LOCATION" \
+  --node-count "$NODE_COUNT" \
+  --node-vm-size "$NODE_SIZE" \
+  --network-plugin azure \
+  --network-plugin-mode overlay \
+  --outbound-type loadBalancer \
+  --enable-private-cluster \
+  --generate-ssh-keys
+
+# Get Credentials
+az aks get-credentials -g "$RG" -n "$AKS" --overwrite-existing

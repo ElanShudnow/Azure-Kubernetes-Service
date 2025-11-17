@@ -3,8 +3,9 @@
 ## Description
 Learn about AKS CNI Overlay Public Clusters with an AKS Managed Virtual Network.  Learn what goes into planning a CNI Overlay Cluster, what the configuration looks like, and use my Azure CLI Scrapbook to deploy.  A public AKS Cluster is where the API Server is reachable via the internet. 
 
-## Files Involved
+## Downloadable Lab Files
 - net00-cni-overlay-public-cluster-managed-vnet.azcli
+- aks-store-quickstart.yaml
 
 ## Introduction
 A CNI Overlay Cluster uses a NAT Overlay network that has been integrated into Azure's Software Defined Network.  The legacy kubenet technology required the use of Route Tables and User Defined Routes (UDRs) to allow the pods/Nodes to be able to talk to each other.  Due to the integration of the overlay with CNI Overlay into the Azure Software Defined Network, Route Tables and UDRs are not required for CNI Overlay.
