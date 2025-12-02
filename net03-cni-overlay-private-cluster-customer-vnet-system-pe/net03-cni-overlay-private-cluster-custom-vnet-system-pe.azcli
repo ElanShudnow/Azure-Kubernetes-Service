@@ -1,0 +1,53 @@
+# General
+LOCATION="centralus"
+RG="rg-aks-cluster"
+AKS="aks-cluster"
+
+# Node pool
+NODE_COUNT=2
+NODE_SIZE="Standard_D4ds_v5"
+
+# VNet & subnets
+VNET="vnet-aks-cluster"
+VNET_CIDR="10.224.0.0/16"
+NODE_SUBNET="aks-nodes"
+NODE_SUBNET_CIDR="10.224.0.0/24"
+
+# Cluster-internal services (must not overlap VNet)
+SERVICE_CIDR="10.0.0.0/16"
+DNS_SERVICE_IP="10.0.0.10"
+
+# Create Resource Group
+az group create -n "$RG" -l "$LOCATION"
+
+# Create VNet with the node subnet
+az network vnet create \
+  -g "$RG" \
+  -n "$VNET" \
+  --address-prefixes "$VNET_CIDR" \
+  --subnet-name "$NODE_SUBNET" \
+  --subnet-prefixes "$NODE_SUBNET_CIDR"
+
+# Capture Node Subnet ID
+NODE_SUBNET_ID=$(az network vnet subnet show -g "$RG" --vnet-name "$VNET" -n "$NODE_SUBNET" --query id -o tsv)
+
+# Deploy Cluster
+## Can leverage the following or omit as it is the default mode when creating a private cluster --private-dns-zone System
+az aks create \
+  -g "$RG" \
+  -n "$AKS" \
+  -l "$LOCATION" \
+  --node-count "$NODE_COUNT" \
+  --node-vm-size "$NODE_SIZE" \
+  --network-plugin azure \
+  --network-plugin-mode overlay \
+  --vnet-subnet-id "$NODE_SUBNET_ID" \
+  --pod-cidr 10.244.0.0/16 \
+  --service-cidr "$SERVICE_CIDR" \
+  --dns-service-ip "$DNS_SERVICE_IP" \
+  --enable-private-cluster \
+  --outbound-type loadBalancer \
+  --generate-ssh-keys
+
+# Get Credentials
+az aks get-credentials -g "$RG" -n "$AKS" --overwrite-existing

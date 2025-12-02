@@ -32,7 +32,7 @@ The following are some other general guidelines regarding AKS Public CNI Overlay
 
     > **Note**: As we will be using a custom Virtual Network, we will be specifying the network prefixes we want for each. We will use the defaults but within our own virtual network.
 
-* If you leave the AKS Cluster to create and manage the Virtual Network (which is one of the goals of this articles), the following Virtual Network Address Space and Node Subnet are used:
+* If you leave the AKS Cluster to create and manage the Virtual Network (which is not one of the goals of this articles), the following Virtual Network Address Space and Node Subnet are used:
 
     * Virtual Network Address Space: 10.224.0.0/12
     * Node Subnet (aks-subnet): 10.224.0.0/16
