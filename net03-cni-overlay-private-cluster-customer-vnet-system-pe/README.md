@@ -113,7 +113,7 @@ Within the JSON view, validate the Pod CIDR, Service CIDR, and DNS Service IP ma
 
 Let's run the following kubectl get to see our nodes (we specified only one) and its Private IP Address, whcih should fall within the 10.224.0.0/16 subnet as mentioned in the Introduction section.
 
-```
+``` bash
 kubectl get nodes -o wide
 ```
 
@@ -127,7 +127,7 @@ For purposes of this lab, I am going to create another subnet in the AKS Custome
 
 From this VM, we'll need to install kubectl and Azure CLI Tools and login via Azure CLI using instructions provided [Install Kubctl](https://kubernetes.io/docs/tasks/tools/) and [Install Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest). After logging in via the Azure CLI, we'll again attempt to get our credentials from our AKS cluster using the following command after re-entering our command-line variables:
 
-```
+``` bash
 az aks get-credentials -g "$RG" -n "$AKS" --overwrite-existing
 ```
 
@@ -140,7 +140,7 @@ Let's download a [Quickstart Sample](https://learn.microsoft.com/en-us/azure/aks
 
 Run the following command to deploy the Quickstart YAML:
 
-```
+``` bash
 kubectl apply -f aks-store-quickstart.yaml
 ```
 
@@ -148,7 +148,7 @@ kubectl apply -f aks-store-quickstart.yaml
 
 If we run the following command, it will allow us to validate our services and their Private IPs (Cluster IP) and we can validate the service is using an IP Address in our Service CIDR Range of 10.0.0/16
 
-```
+``` bash
 kubectl get service
 ```
 
@@ -156,7 +156,7 @@ kubectl get service
 
 If we run the following command, it will allow us to validate our pods and their Private IPs belong to the Pod CIDR Network Prefix Range of 10.244.0.0/16
 
-```
+``` bash
 kubectl get pod -o wide
 ```
 
@@ -165,7 +165,7 @@ kubectl get pod -o wide
 It was mentioned in the introduction that for a CNI Overlay Cluster, each node carves out a /24 network prefix for the Pod CIDR which is why each node is allowed to support a max amount of 250 pods per node.  We just validated that the pods are all running on 10.244 which is part of the Pod CIDR Network Prefix.  But if you'd like to see what /24 Pod CIDR Prefix it has been carved out, you can run the following command:
 
 Single Node (specify `<node name>`):
-```
+``` bash
 kubectl -n kube-system get nnc <node name> -o jsonpath='{.metadata.name}{" -> PrimaryIP: "}{.status.networkContainers[0].primaryIP}{" | Subnet: "}{.status.networkContainers[0].subnetAddressSpace}{"\n"}'
 ```
 
@@ -175,7 +175,7 @@ After running the command to retrieve a specific node, the network prefix return
 
 
 All Nodes (exclude `<node name>`):
-```
+``` bash
 kubectl -n kube-system get nnc -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.status.networkContainers[0].primaryIP}{"\t"}{.status.networkContainers[0].subnetAddressSpace}{"\n"}{end}'
 ```
 
@@ -213,7 +213,7 @@ In our managed AKS Private DNS Zone, our Private DNS Zone is: <span style="color
 
 And remember when we get the AKS Credentials for an AKS Cluster, it tells us that the config has been written to /home/user/.kube/config.  :
 
-```
+``` bash
 az aks get-credentials -g "$RG" -n "$AKS" --overwrite-existing
 ```
 
@@ -222,3 +222,36 @@ az aks get-credentials -g "$RG" -n "$AKS" --overwrite-existing
 In our config file, the server that the az aks get-credentials provides us is the same privateFQDN we saw in our AKS Cluster's JSON View within the Azure Portal.  Because my VM is in the same Virtual Network (as mentioned earlier, there are several ways to connect to a Private AKS Cluster), we have access to the Private DNS Zone that is linked to our managed Virtual Network and therefore, have access to the Private DNS Zone, the Private Endpoint/NIC FQDN/IP Record, and can establish a connection to our API Server via our Private Endpoint.
 
 ![Kubectl Config privateFQDN](../media/net03-cni-overlay-private-cluster-customer-vnet-system-pe/kubeconfig.png)
+
+## Disabling Public FQDN
+
+As we saw earlier, our AKS Private Cluster has both fqdn and privateFQDN.  And our kube config file that is configured at /home/eshudnow/.kube/config contains the privateFQDN.
+
+``` json
+"properties": {
+        "provisioningState": "Succeeded",
+        "powerState": {
+            "code": "Running"
+        },
+        "kubernetesVersion": "1.32",
+        "currentKubernetesVersion": "1.32.9",
+        "dnsPrefix": "aks-cluste-rg-aks-cluster-1df8be",
+        "fqdn": "aks-cluste-rg-aks-cluster-1df8be-okag7okj.hcp.centralus.azmk8s.io",
+        "azurePortalFQDN": "7501329e84dfabdcd835bfd18e8296e7-priv.portal.hcp.centralus.azmk8s.io",
+        "privateFQDN": "aks-cluste-rg-aks-cluster-1df8be-imb5zd8k.1c41352d-7472-4e38-ad12-d4d6c80eba70.privatelink.centralus.azmk8s.io",
+```
+
+The question folks may have is, is the fqdn, which is our public FQDN still resolvable from the internet? Let's take a look...
+
+![fqdn nslookup](../media/net03-cni-overlay-private-cluster-customer-vnet-system-pe/publicfqdn01.png)
+
+It certainly is... BUT... it provides back the private IP Address of our Private Endpoint.  Obviously, we can't connect to this over the internet.  But security may want to fully remove this FQDN from being resolved from the internet. In order to do so, we can run the following command:
+
+``` bash
+az aks update -g "$RG" -n "$AKS" --disable-public-fqdn
+```
+
+Upon completion of the provisioning, let's flush our client DNS cache and try the nslookup again.  This time, we will see our fqdn is not resolvable from the internet any longer.
+
+![fqdn nslookup2](../media/net03-cni-overlay-private-cluster-customer-vnet-system-pe/publicfqdn02.png)
+
