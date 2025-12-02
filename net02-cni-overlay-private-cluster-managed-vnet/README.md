@@ -96,7 +96,7 @@ Within the JSON view, validate the Pod CIDR, Service CIDR, and DNS Service IP ma
 
 Let's run the following kubectl get to see our nodes (we specified only one) and its Private IP Address, whcih should fall within the 10.224.0.0/16 subnet as mentioned in the Introduction section.
 
-```
+``` bash
 kubectl get nodes -o wide
 ```
 
@@ -110,7 +110,7 @@ For purposes of this lab, I am going to create another subnet in the AKS Managed
 
 From this VM, we'll need to install kubectl and Azure CLI Tools and login via Azure CLI using instructions provided [Install Kubctl](https://kubernetes.io/docs/tasks/tools/) and [Install Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest). After logging in via the Azure CLI, we'll again attempt to get our credentials from our AKS cluster using the following command after re-entering our command-line variables:
 
-```
+``` bash
 az aks get-credentials -g "$RG" -n "$AKS" --overwrite-existing
 ```
 
@@ -123,7 +123,7 @@ Let's download a [Quickstart Sample](https://learn.microsoft.com/en-us/azure/aks
 
 Run the following command to deploy the Quickstart YAML:
 
-```
+``` bash
 kubectl apply -f aks-store-quickstart.yaml
 ```
 
@@ -131,7 +131,7 @@ kubectl apply -f aks-store-quickstart.yaml
 
 If we run the following command, it will allow us to validate our services and their Private IPs (Cluster IP) and we can validate the service is using an IP Address in our Service CIDR Range of 10.0.0/16
 
-```
+``` bash
 kubectl get service
 ```
 
@@ -139,7 +139,7 @@ kubectl get service
 
 If we run the following command, it will allow us to validate our pods and their Private IPs belong to the Pod CIDR Network Prefix Range of 10.244.0.0/16
 
-```
+``` bash
 kubectl get pod -o wide
 ```
 
@@ -148,12 +148,12 @@ kubectl get pod -o wide
 It was mentioned in the introduction that for a CNI Overlay Cluster, each node carves out a /24 network prefix for the Pod CIDR which is why each node is allowed to support a max amount of 250 pods per node.  We just validated that the pods are all running on 10.244 which is part of the Pod CIDR Network Prefix.  But if you'd like to see what /24 Pod CIDR Prefix it has been carved out, you can run the following command:
 
 Single Node (specify `<node name>`):
-```
+``` bash
 kubectl -n kube-system get nnc <node name> -o jsonpath='{.metadata.name}{" -> PrimaryIP: "}{.status.networkContainers[0].primaryIP}{" | Subnet: "}{.status.networkContainers[0].subnetAddressSpace}{"\n"}'
 ```
 
 All Nodes (exclude `<node name>`):
-```
+``` bash
 kubectl -n kube-system get nnc -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.status.networkContainers[0].primaryIP}{"\t"}{.status.networkContainers[0].subnetAddressSpace}{"\n"}{end}'
 ```
 
@@ -180,7 +180,7 @@ In our managed AKS Private DNS Zone, our Private DNS Zone is: <span style="color
 
 And remember when we get the AKS Credentials for an AKS Cluster, it tells us that the config has been written to /home/user/.kube/config.  :
 
-```
+``` bash
 az aks get-credentials -g "$RG" -n "$AKS" --overwrite-existing
 ```
 
