@@ -35,6 +35,9 @@ The following are some other general guidelines regarding AKS Public CNI Overlay
     * Virtual Network Address Space: 10.224.0.0/12
     * Node Subnet (aks-subnet): 10.224.0.0/16
 
+* The Private Endpoint created will leverage the same subnet the AKS Nodes use.  Thefore, it takes away an available IP Address that would otherwise be used for an additional node.  This should be accounted for in the amount of nodes your cluster can scale to. Typically, with CNI Overlay, a /24 subnet can fit up to 251 nodes since the first three IP addresses are reserved for management tasks.  Because the Private Endpoint will consume an IP Address in the same subnet as Nodes, you will instead be able to scale up to 250 nodes.
+
+
 ![CNI Overlay Architecture](../media/net00-cni-overlay-public-cluster-managed-vnet/azure-cni-overlay.png)
 
 I would recommend reading the following articles which discuss more of the above:

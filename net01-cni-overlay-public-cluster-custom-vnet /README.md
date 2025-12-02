@@ -38,7 +38,7 @@ The following are some other general guidelines regarding AKS Public CNI Overlay
     * Node Subnet (aks-subnet): 10.224.0.0/16
 
     > **Note**: As we will be using a custom Virtual Network, we will be specifying the network prefixes we want for each. We will use the defaults but within our own virtual network.
-
+    
 
 ![CNI Overlay Architecture](../media/net00-cni-overlay-public-cluster-managed-vnet/azure-cni-overlay.png)
 
