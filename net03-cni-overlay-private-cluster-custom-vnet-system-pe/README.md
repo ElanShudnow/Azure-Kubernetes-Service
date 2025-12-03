@@ -194,7 +194,7 @@ Go back to the JSON View of our AKS Cluster.
 
 Within the properties, there is both an fqdn and privateFQDN property.
 
-```
+``` json
 "properties": {
         "provisioningState": "Succeeded",
         "powerState": {
